@@ -289,7 +289,15 @@ function Play({ currentUser }) {
       setPhase('ended');
       return true;
     }
-
+     // В Play.jsx
+if (!currentUser) {
+  return (
+    <div className="text-center py-20 text-[#d4af37]">
+      <h2 className="text-2xl font-bold uppercase">Доступ ограничен</h2>
+      <p className="mt-2 text-sm text-[#c5a059]">Пожалуйста, представьтесь в меню выше, чтобы войти в лобби.</p>
+    </div>
+  );
+}
     if (aliveMafia.length === 1 && aliveNeutrals.length === 1 && aliveCivilians.length === 0) {
       setWinnerInfo({ team: 'Мафия и Нейтрал', color: 'bg-purple-950 border-purple-500 text-purple-200', names: [...aliveMafia, ...aliveNeutrals].map(p => p.name) });
       setPhase('ended');
