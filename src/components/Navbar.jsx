@@ -13,9 +13,9 @@ const Navbar = ({ userName, onChangeName }) => {
           
           {/* Логотип */}
           <Link to="/" className="group flex items-center gap-2 sm:gap-3" onClick={() => setIsMenuOpen(false)}>
-            <span className="text-xl sm:text-2xl">🎩</span>
+            <img className='w-[30px] h-[30px]' src="favicon.svg" alt="" />
             <span className="text-lg sm:text-2xl font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-[#d4af37] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] transition-colors group-hover:text-[#f3e5ab]">
-              Mafia Cards
+              Mafia Online
             </span>
           </Link>
 
