@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+body {
+  @apply min-h-screen text-white antialiased;
+  background: linear-gradient(135deg, #020024 0%, #090979 60%, #00d4ff 100%);
+  background-attachment: fixed;
+}
