@@ -10,12 +10,12 @@ const Navbar = ({ userName, onChangeName }) => {
     <nav className="border-b border-[#d4af37]/30 bg-[#140b07]/95 shadow-[0_4px_20px_rgba(0,0,0,0.8)] backdrop-blur-md sticky top-0 z-40">
       <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          
+
           {/* Логотип */}
           <Link to="/" className="group flex items-center gap-2 sm:gap-3" onClick={() => setIsMenuOpen(false)}>
             <img className='w-[30px] h-[30px]' src="favicon.svg" alt="" />
             <span className="text-lg sm:text-2xl font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-[#d4af37] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] transition-colors group-hover:text-[#f3e5ab]">
-              Mafia Online
+              Mafia Play
             </span>
           </Link>
 
@@ -25,14 +25,22 @@ const Navbar = ({ userName, onChangeName }) => {
               to="/"
               className="rounded-lg bg-gradient-to-r from-[#8b0000] to-[#5c0000] px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#f3e5ab] border border-[#d4af37] shadow-md transition-all hover:brightness-125 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)]"
             >
-              🏠 Главная
+               Главная
             </Link>
 
-            <Link 
-              to="/play" 
+            {/* Добавлено сюда для компьютера */}
+            <Link
+              to="/rules"
               className="rounded-lg bg-gradient-to-r from-[#8b0000] to-[#5c0000] px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#f3e5ab] border border-[#d4af37] shadow-md transition-all hover:brightness-125 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)]"
             >
-              🎮 Играть
+               Правила
+            </Link>
+
+            <Link
+              to="/play"
+              className="rounded-lg bg-gradient-to-r from-[#8b0000] to-[#5c0000] px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#f3e5ab] border border-[#d4af37] shadow-md transition-all hover:brightness-125 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)]"
+            >
+               Играть
             </Link>
 
             {userName && (
@@ -69,15 +77,24 @@ const Navbar = ({ userName, onChangeName }) => {
               onClick={() => setIsMenuOpen(false)}
               className="block text-center rounded-lg bg-gradient-to-r from-[#8b0000] to-[#5c0000] py-2.5 text-xs font-bold uppercase tracking-widest text-[#f3e5ab] border border-[#d4af37]"
             >
-              🏠 Главная
+              Главная
             </Link>
 
-            <Link 
-              to="/play" 
+            {/* Исправлены классы для мобильного меню */}
+            <Link
+              to="/rules"
               onClick={() => setIsMenuOpen(false)}
               className="block text-center rounded-lg bg-gradient-to-r from-[#8b0000] to-[#5c0000] py-2.5 text-xs font-bold uppercase tracking-widest text-[#f3e5ab] border border-[#d4af37]"
             >
-              🎮 Играть
+              Правила
+            </Link>
+
+            <Link
+              to="/play"
+              onClick={() => setIsMenuOpen(false)}
+              className="block text-center rounded-lg bg-gradient-to-r from-[#8b0000] to-[#5c0000] py-2.5 text-xs font-bold uppercase tracking-widest text-[#f3e5ab] border border-[#d4af37]"
+            >
+              Играть
             </Link>
 
             {userName && (

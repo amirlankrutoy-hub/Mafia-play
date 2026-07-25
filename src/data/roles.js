@@ -1,3 +1,4 @@
+// roles.js
 const roles = [
   {
     id: 'doctor',
@@ -36,6 +37,15 @@ const roles = [
     ability: 'Убивает любого игрока каждую ночь.'
   },
   {
+    id: 'obivatel',
+    name: 'Обыватель',
+    category: 'civilians',
+    team: 'Мирные жители',
+    image: '/Obivatel.jpg',
+    description: 'Обычный житель города без особых ночных умений. Его главное оружие — дедукция и голос на дневном голосовании.',
+    ability: 'Участвует в дневном голосовании жителей.'
+  },
+  {
     id: 'otez',
     name: 'Крёстный отец',
     category: 'mafia',
@@ -47,8 +57,8 @@ const roles = [
   {
     id: 'poklon',
     name: 'Поклонница',
-    category: 'civilians',
-    team: 'Мирные жители',
+    category: 'neutrals',
+    team: 'Нейтралы',
     image: '/Poklonniza.jpg',
     description: 'Следит за выбранным игроком и узнаёт его роль или действия.',
     ability: 'Узнаёт действия выбранного игрока.'

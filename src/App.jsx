@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import RoleDetail from './pages/RoleDetail';
 import Play from './pages/Play';
+import Rules from './pages/Rules'; // <--- Импортируем правила
 import Navbar from './components/Navbar';
 import NotFound from './pages/NotFound';
 import NameModal from './components/NameModal';
@@ -45,6 +46,7 @@ function App() {
           <Route path="/" element={<Home userName={userName} />} />
           <Route path="/role/:id" element={<RoleDetail />} />
           <Route path="/play" element={<Play currentUser={userName} />} />
+          <Route path="/rules" element={<Rules />} /> {/* <--- Добавили роут */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

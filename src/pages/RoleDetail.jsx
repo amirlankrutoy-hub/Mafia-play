@@ -28,7 +28,7 @@ function RoleDetail() {
         to="/"
         className="mb-6 inline-flex items-center text-sm font-bold uppercase tracking-wider text-[#d4af37] hover:underline"
       >
-        ← Вернуться к картотеке
+        ← Вернуться в главное меню
       </Link>
 
       <div className="relative overflow-hidden rounded-2xl border-2 border-[#d4af37]/60 bg-gradient-to-br from-[#1c100b] via-[#120a07] to-[#080402] p-6 md:p-10 shadow-[0_15px_40px_rgba(0,0,0,0.9)]">

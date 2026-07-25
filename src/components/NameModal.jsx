@@ -28,7 +28,8 @@ const NameModal = ({ onSaveName, existingName }) => {
         <div className="absolute bottom-2 left-2 h-3.5 w-3.5 sm:h-4 sm:w-4 border-b-2 border-l-2 border-[#d4af37]" />
         <div className="absolute bottom-2 right-2 h-3.5 w-3.5 sm:h-4 sm:w-4 border-b-2 border-r-2 border-[#d4af37]" />
 
-        <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">🎩</div>
+       <img className="w-[50px] h-[50px] mx-auto" src="/favicon.svg" alt="" />
+       <br />
 
         {hasSavedName ? (
           <div className="space-y-4 sm:space-y-6">
