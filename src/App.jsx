@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import RoleDetail from './pages/RoleDetail';
-import Play from './pages/Play'; // <--- Новый импорт
+import Play from './pages/Play';
 import Navbar from './components/Navbar';
 import NotFound from './pages/NotFound';
 import NameModal from './components/NameModal';
@@ -44,7 +44,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home userName={userName} />} />
           <Route path="/role/:id" element={<RoleDetail />} />
-          <Route path="/play" element={<Play currentUser={userName} />} /> {/* <--- Новый роут */}
+          <Route path="/play" element={<Play currentUser={userName} />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
