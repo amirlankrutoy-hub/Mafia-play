@@ -20,78 +20,119 @@ const KICK_REASONS = [
   "Ругается / Неадекватное поведение 🤬"
 ];
 
+const UNKNOWN_PERSON_IMAGE = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRm15yBI97uGrqTY0W9oUuuQxkZlI7OYiQ95HKqekqhvA&s=10";
+
 function Play({ currentUser }) {
   const navigate = useNavigate();
 
-  // Название городка и История
   const [cityNameInput, setCityNameInput] = useState('');
-  const [cityName, setCityName] = useState('Тёмный Ручей');
-  const [introStep, setIntroStep] = useState('setup'); // 'setup', 'story', 'done'
+  const [cityName, setCityName] = useState(() => localStorage.getItem('mafia_cityName') || 'Тёмный Ручей');
+  const [introStep, setIntroStep] = useState(() => localStorage.getItem('mafia_introStep') || 'setup'); 
   const [storyPage, setStoryPage] = useState(1);
 
-  // Состояние вспышки молнии
   const [isLightning, setIsLightning] = useState(false);
 
-  // Режимы и Лобби
-  const [mode, setMode] = useState(null);
-  const [roomCode, setRoomCode] = useState('');
-  const [players, setPlayers] = useState([]);
+  const [mode, setMode] = useState(() => localStorage.getItem('mafia_mode') || null);
+  const [roomCode, setRoomCode] = useState(() => localStorage.getItem('mafia_roomCode') || '');
+  const [players, setPlayers] = useState(() => {
+    const saved = localStorage.getItem('mafia_players');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [newPlayerName, setNewPlayerName] = useState('');
 
-  // Экран Загрузки (3 секунды)
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('Загрузка...');
 
-  // Выбранные роли
-  const [selectedRoles, setSelectedRoles] = useState([]);
-
-  // Фазы игры
-  const [phase, setPhase] = useState('night');
-  const [round, setRound] = useState(1);
-  const [currentTurnIndex, setCurrentTurnIndex] = useState(0);
-
-  // Ночные действия
-  const [nightActions, setNightActions] = useState({
-    doctorTarget: null,
-    mafiaTarget: null,
-    bossTarget: null,
-    maniacTarget: null,
-    sheriffTarget: null,
-    priestTarget: null,
-    priestActionType: null,
-    ripperTarget: null,
-    fanTarget: null,
-    beautyTarget: null,
-    snitchTarget: null,
-    snitchActionType: null,
+  const [selectedRoles, setSelectedRoles] = useState(() => {
+    const saved = localStorage.getItem('mafia_selectedRoles');
+    return saved ? JSON.parse(saved) : [];
   });
 
-  const [nightLog, setNightLog] = useState([]);
-  const [detailedMorningReport, setDetailedMorningReport] = useState([]);
+  const [phase, setPhase] = useState(() => localStorage.getItem('mafia_phase') || 'night');
+  const [round, setRound] = useState(() => Number(localStorage.getItem('mafia_round')) || 1);
+  const [currentTurnIndex, setCurrentTurnIndex] = useState(() => Number(localStorage.getItem('mafia_currentTurnIndex')) || 0);
+
+  const [nightActions, setNightActions] = useState(() => {
+    const saved = localStorage.getItem('mafia_nightActions');
+    return saved ? JSON.parse(saved) : {
+      doctorTarget: null,
+      mafiaTarget: null,
+      godfatherTarget: null,
+      maniacTarget: null,
+      sheriffTarget: null,
+      priestTarget: null,
+      priestActionType: null,
+      ripperTarget: null,
+      fanTarget: null,
+      beautyTarget: null,
+      snitchTarget: null,
+      snitchActionType: null,
+    };
+  });
+
+  const [nightLog, setNightLog] = useState(() => {
+    const saved = localStorage.getItem('mafia_nightLog');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [detailedMorningReport, setDetailedMorningReport] = useState(() => {
+    const saved = localStorage.getItem('mafia_morningReport');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [nightText, setNightText] = useState('');
 
-  // Специальные механики
-  const [fanAffiliation, setFanAffiliation] = useState(null);
-  const [snitchKnownRolesCount, setSnitchKnownRolesCount] = useState(0);
-  const [silencedPlayerId, setSilencedPlayerId] = useState(null);
+  const [fanAffiliation, setFanAffiliation] = useState(() => localStorage.getItem('mafia_fanAffiliation') || null);
+  const [snitchKnownRolesCount, setSnitchKnownRolesCount] = useState(() => Number(localStorage.getItem('mafia_snitchCount')) || 0);
+  const [silencedPlayerId, setSilencedPlayerId] = useState(() => {
+    const saved = localStorage.getItem('mafia_silencedId');
+    return saved ? Number(saved) : null;
+  });
   const [checkedRoleInfo, setCheckedRoleInfo] = useState(null);
 
-  // День и Результаты
   const [votes, setVotes] = useState({});
   const [executedPlayer, setExecutedPlayer] = useState(null);
-  const [winnerInfo, setWinnerInfo] = useState(null);
+  const [winnerInfo, setWinnerInfo] = useState(() => {
+    const saved = localStorage.getItem('mafia_winnerInfo');
+    return saved ? JSON.parse(saved) : null;
+  });
 
-  // Панель Мэра
   const [isMayorPanelOpen, setIsMayorPanelOpen] = useState(false);
   const [panelPos, setPanelPos] = useState({ x: 10, y: 80 });
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef({ startX: 0, startY: 0, posX: 10, posY: 80 });
 
+  const [isCitizensModalOpen, setIsCitizensModalOpen] = useState(false);
+  const [isMayorVerified, setIsMayorVerified] = useState(false);
+  const [codeInputValue, setCodeInputValue] = useState('');
+  const [authError, setAuthError] = useState('');
+
   const [kickTarget, setKickTarget] = useState(null);
   const [selectedReason, setSelectedReason] = useState(KICK_REASONS[0]);
   const [customReason, setCustomReason] = useState('');
 
-  // ⚡ 👻 УЖАСАЮЩАЯ МУЗЫКА, ЗВУК ГРОМА И МИГАНИЕ МОЛНИИ (Web Audio API)
+  useEffect(() => {
+    localStorage.setItem('mafia_cityName', cityName);
+    localStorage.setItem('mafia_introStep', introStep);
+    localStorage.setItem('mafia_mode', mode || '');
+    localStorage.setItem('mafia_roomCode', roomCode);
+    localStorage.setItem('mafia_players', JSON.stringify(players));
+    localStorage.setItem('mafia_selectedRoles', JSON.stringify(selectedRoles));
+    localStorage.setItem('mafia_phase', phase);
+    localStorage.setItem('mafia_round', round);
+    localStorage.setItem('mafia_currentTurnIndex', currentTurnIndex);
+    localStorage.setItem('mafia_nightActions', JSON.stringify(nightActions));
+    localStorage.setItem('mafia_nightLog', JSON.stringify(nightLog));
+    localStorage.setItem('mafia_morningReport', JSON.stringify(detailedMorningReport));
+    localStorage.setItem('mafia_fanAffiliation', fanAffiliation || '');
+    localStorage.setItem('mafia_snitchCount', snitchKnownRolesCount);
+    localStorage.setItem('mafia_silencedId', silencedPlayerId || '');
+    localStorage.setItem('mafia_winnerInfo', JSON.stringify(winnerInfo));
+  }, [
+    cityName, introStep, mode, roomCode, players, selectedRoles,
+    phase, round, currentTurnIndex, nightActions, nightLog,
+    detailedMorningReport, fanAffiliation, snitchKnownRolesCount,
+    silencedPlayerId, winnerInfo
+  ]);
+
   useEffect(() => {
     let audioCtx = null;
     let thunderInterval = null;
@@ -316,6 +357,9 @@ function Play({ currentUser }) {
       setSnitchKnownRolesCount(0);
       setFanAffiliation(null);
       setSilencedPlayerId(null);
+      setIsMayorVerified(false);
+      setCodeInputValue('');
+      setAuthError('');
       resetNightActions();
     });
   };
@@ -324,7 +368,7 @@ function Play({ currentUser }) {
     setNightActions({
       doctorTarget: null,
       mafiaTarget: null,
-      bossTarget: null,
+      godfatherTarget: null,
       maniacTarget: null,
       sheriffTarget: null,
       priestTarget: null,
@@ -358,8 +402,8 @@ function Play({ currentUser }) {
     const hasMafia = alive.some(p => p.role?.category === 'mafia');
     if (hasMafia) queue.push({ key: 'mafia', title: '🔴 Мафия просыпается...' });
 
-    const boss = findAliveRole(['boss', 'босс', 'дон']);
-    if (boss) queue.push({ key: 'boss', title: '🎩 Босс Мафии просыпается...', player: boss });
+    const godfather = findAliveRole(['godfather', 'крестный отец', 'отец', 'don', 'дон']);
+    if (godfather) queue.push({ key: 'godfather', title: '🎩 Крёстный Отец выбирает цель для блокировки голоса...', player: godfather });
 
     const maniac = findAliveRole(['maniac', 'маньяк']);
     if (maniac) queue.push({ key: 'maniac', title: '🔪 Маньяк просыпается...', player: maniac });
@@ -408,9 +452,9 @@ function Play({ currentUser }) {
     } else if (key === 'mafia') {
       setNightActions(prev => ({ ...prev, mafiaTarget: targetPlayer.id }));
       logMsg = `🔴 Мафия выбрала цель.`;
-    } else if (key === 'boss') {
-      setNightActions(prev => ({ ...prev, bossTarget: targetPlayer.id }));
-      logMsg = `🎩 Босс Мафии заблокировал голос игрока.`;
+    } else if (key === 'godfather') {
+      setNightActions(prev => ({ ...prev, godfatherTarget: targetPlayer.id }));
+      logMsg = `🎩 Крёстный Отец заблокировал голос игрока ${targetPlayer.name}.`;
     } else if (key === 'maniac') {
       setNightActions(prev => ({ ...prev, maniacTarget: targetPlayer.id }));
       logMsg = `🔪 Маньяк сделал свой выбор.`;
@@ -476,10 +520,14 @@ function Play({ currentUser }) {
         }
       }
 
-      if (beautyUser && attackTargets.has(beautyUser.id) && beautyTarget) {
+      if (beautyUser && attackTargets.has(beautyUser.id)) {
         attackTargets.delete(beautyUser.id);
-        attackTargets.add(beautyTarget);
-        summaryList.push(`💄 На Красотку совершили нападение, но вместо нее под удар попал её покровитель!`);
+        if (beautyTarget) {
+          attackTargets.add(beautyTarget);
+          summaryList.push(`💄 На Красотку совершили нападение, но вместо нее под удар попал выбранный ею игрок (${players.find(p => p.id === beautyTarget)?.name})!`);
+        } else {
+          summaryList.push(`💄 На Красотку совершили нападение, но она была укрыта (цель не выбрана).`);
+        }
       }
 
       let deadIDs = new Set();
@@ -491,9 +539,9 @@ function Play({ currentUser }) {
         }
       });
 
-      if (nightActions.bossTarget) {
-        setSilencedPlayerId(nightActions.bossTarget);
-        summaryList.push(`🤫 ${players.find(p => p.id === nightActions.bossTarget)?.name} был лишен права голоса Боссом Мафии!`);
+      if (nightActions.godfatherTarget) {
+        setSilencedPlayerId(nightActions.godfatherTarget);
+        summaryList.push(`🤫 Крёстный Отец лишил права голоса игрока ${players.find(p => p.id === nightActions.godfatherTarget)?.name}!`);
       } else {
         setSilencedPlayerId(null);
       }
@@ -614,18 +662,32 @@ function Play({ currentUser }) {
   };
 
   const handlePlayAgain = () => {
+    localStorage.clear();
     setPlayers(players.map(p => ({ ...p, isAlive: true, role: null, diedBy: null })));
     setSelectedRoles([]);
     setWinnerInfo(null);
     setExecutedPlayer(null);
     setIsMayorPanelOpen(false);
+    setIsCitizensModalOpen(false);
+    setIsMayorVerified(false);
     setPhase('night');
     setMode('lobby');
   };
 
+  const handleVerifyMayorCode = (e) => {
+    e.preventDefault();
+    if (codeInputValue.trim() === roomCode) {
+      setIsMayorVerified(true);
+      setAuthError('');
+    } else {
+      setAuthError('Неверный пароль Мэра!');
+    }
+  };
+
+  const aliveCount = players.filter(p => p.isAlive).length;
+
   return (
     <div className="mx-auto max-w-4xl px-3 sm:px-4 py-4 sm:py-6 space-y-6 relative min-h-[80vh] overflow-x-hidden">
-      {/* ⏳ ЭКРАН ЗАГРУЗКИ (3 секунды) */}
       {isLoading && (
         <div className="fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-center p-4">
           <div className="h-16 w-16 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin mb-6"></div>
@@ -636,7 +698,6 @@ function Play({ currentUser }) {
         </div>
       )}
 
-      {/* 📖 ИНТРО: Создание городка */}
       {introStep === 'setup' && (
         <div className="rounded-2xl border-2 border-[#d4af37] bg-[#120a07] p-5 sm:p-8 text-center space-y-6 max-w-xl mx-auto shadow-2xl">
           <div className="text-5xl animate-bounce"><img className="w-[50px] h-[50px] mx-auto" src="/favicon.svg" alt="" /></div>
@@ -665,7 +726,6 @@ function Play({ currentUser }) {
         </div>
       )}
 
-      {/* 👻 5 СТРАНИЦ ИСТОРИИ */}
       {introStep === 'story' && (
         <div
           className={`fixed inset-0 z-40 flex flex-col items-center justify-between p-4 sm:p-6 transition-colors duration-75 ${
@@ -789,7 +849,6 @@ function Play({ currentUser }) {
         </div>
       )}
 
-      {/* ОСНОВНОЕ МЕНЮ И ЛОББИ ПОСЛЕ ИСТОРИИ */}
       {introStep === 'done' && !mode && (
         <div className="text-center space-y-6 py-8 sm:py-12 px-2">
           <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-widest text-[#d4af37]">
@@ -808,7 +867,10 @@ function Play({ currentUser }) {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#c5a059]/30 pb-4">
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-[#d4af37]">Участники ({players.length}/20)</h2>
-              <p className="text-xs text-[#c5a059]">Мэр: {currentUser} | Код: {roomCode}</p>
+              <p className="text-xs text-[#c5a059]">Мэр: <span className="text-white font-bold">{currentUser}</span></p>
+              <p className="text-xs text-[#c5a059] mt-1">
+                🔑 Пароль Мэра: <span className="text-[#d4af37] font-black text-sm tracking-wider bg-black/50 px-2 py-0.5 rounded border border-[#d4af37]/30">{roomCode}</span>
+              </p>
             </div>
             <button onClick={goToCardSelect} disabled={players.length < 3} className="w-full sm:w-auto rounded-lg bg-[#d4af37] px-6 py-2.5 font-bold uppercase text-black disabled:opacity-40">
               К выбору карт →
@@ -860,10 +922,16 @@ function Play({ currentUser }) {
 
       {mode === 'game' && phase !== 'ended' && (
         <div className="space-y-6">
-          <div className="flex justify-end">
-            <button onClick={() => setIsMayorPanelOpen(!isMayorPanelOpen)} className="w-full sm:w-auto rounded-xl border-2 border-[#d4af37] bg-gradient-to-r from-[#8b0000] to-[#1c100b] px-6 py-3 font-black uppercase text-[#f3e5ab] text-sm">
-              🎩 Полномочия Мэра
-            </button>
+          <div className="flex flex-wrap justify-between items-center gap-3 bg-[#1c100b] border border-[#d4af37]/40 px-4 py-3 rounded-xl">
+            <span className="text-xs sm:text-sm font-bold text-[#d4af37]">👥 Осталось в живых: <strong className="text-white text-base">{aliveCount}</strong> из {players.length}</span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setIsCitizensModalOpen(true)} className="rounded-xl border border-[#d4af37] bg-[#8b0000] px-4 py-2 font-black uppercase text-[#f3e5ab] text-xs hover:scale-105 transition-all">
+                👥 Жители города
+              </button>
+              <button onClick={() => setIsMayorPanelOpen(!isMayorPanelOpen)} className="rounded-xl border border-[#d4af37] bg-gradient-to-r from-[#8b0000] to-[#1c100b] px-4 py-2 font-black uppercase text-[#f3e5ab] text-xs">
+                🎩 Мэр
+              </button>
+            </div>
           </div>
 
           {phase === 'night' && (
@@ -977,8 +1045,11 @@ function Play({ currentUser }) {
           {phase === 'day' && (
             <div className="rounded-2xl border-2 border-[#d4af37] bg-[#120a07] p-4 sm:p-8 space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#c5a059]/30 pb-4">
-                <h2 className="text-xl sm:text-3xl font-black uppercase text-[#d4af37]">☀️ Дневное Обсуждение</h2>
-                <button onClick={handleEndDay} className="w-full sm:w-auto rounded-lg bg-[#d4af37] px-6 py-3 font-bold uppercase text-black text-sm">
+                <div>
+                  <h2 className="text-xl sm:text-3xl font-black uppercase text-[#d4af37]">☀️ Дневное Обсуждение и Голосование</h2>
+                  <p className="text-xs text-[#c5a059] mt-1">Осталось в живых игроков: <strong className="text-white">{aliveCount}</strong></p>
+                </div>
+                <button onClick={handleEndDay} className="w-full sm:w-auto rounded-lg bg-[#d4af37] px-6 py-3 font-bold uppercase text-black text-sm hover:bg-[#f3e5ab] transition-all">
                   Итоги голосования 🌙
                 </button>
               </div>
@@ -994,46 +1065,197 @@ function Play({ currentUser }) {
                   <h3 className="text-2xl sm:text-3xl font-black text-white">{executedPlayer.name} Казнён!</h3>
                 </div>
               )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-4">
+                {players.map((p) => {
+                  const isSilenced = p.id === silencedPlayerId;
+
+                  return (
+                    <div
+                      key={p.id}
+                      className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border p-4 shadow-xl transition-all duration-300 ${
+                        !p.isAlive 
+                          ? 'border-red-900 bg-black/95 opacity-75' 
+                          : 'border-[#c5a059]/40 bg-gradient-to-b from-[#1c100b] via-[#120a07] to-[#0a0503]'
+                      }`}
+                    >
+                      <div className="absolute top-1.5 left-1.5 h-3 w-3 border-l-2 border-t-2 border-[#d4af37]/60"></div>
+                      <div className="absolute top-1.5 right-1.5 h-3 w-3 border-r-2 border-t-2 border-[#d4af37]/60"></div>
+                      <div className="absolute bottom-1.5 left-1.5 h-3 w-3 border-l-2 border-b-2 border-[#d4af37]/60"></div>
+                      <div className="absolute bottom-1.5 right-1.5 h-3 w-3 border-r-2 border-b-2 border-[#d4af37]/60"></div>
+
+                      <div>
+                        <div className="relative h-48 w-full overflow-hidden rounded-lg border border-[#c5a059]/30 bg-black">
+                          <img
+                            src={UNKNOWN_PERSON_IMAGE}
+                            alt="Неизвестный"
+                            className="h-full w-full object-cover object-top filter grayscale contrast-125"
+                          />
+                        </div>
+
+                        <div className="mt-3 text-center space-y-1.5">
+                          <h3 className="text-xl font-bold uppercase tracking-wider text-[#d4af37]">
+                            {p.name} {!p.isAlive && '💀'}
+                          </h3>
+
+                          {isSilenced && (
+                            <span className="inline-block text-[10px] bg-yellow-900 text-yellow-200 px-2 py-0.5 rounded font-bold">
+                              Голос заблокирован Крёстным!
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 border-t border-[#c5a059]/20 pt-3 text-center">
+                        {p.isAlive ? (
+                          <button
+                            disabled={isSilenced}
+                            onClick={() => handleVote(p.id)}
+                            className="inline-block w-full rounded-lg border border-[#d4af37]/50 px-4 py-2 text-xs font-bold uppercase tracking-[0.1em] text-[#f3e5ab] bg-[#8b0000]/60 hover:border-[#d4af37] hover:text-white disabled:opacity-30"
+                          >
+                            Голосовать ({votes[p.id] || 0})
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-red-300 bg-red-950 border border-red-800 px-2 py-0.5 rounded font-bold block">
+                            {p.diedBy || 'Мертв'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
+        </div>
+      )}
 
-          <div className="rounded-2xl border border-[#d4af37]/40 bg-[#120a07] p-4 sm:p-6 space-y-4">
-            <h3 className="text-lg sm:text-xl font-bold text-[#d4af37]">Жители города {cityName}:</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {players.map((p) => {
-                const isSilenced = p.id === silencedPlayerId;
-                return (
-                  <div key={p.id} className={`rounded-xl border p-3.5 flex justify-between items-center ${!p.isAlive ? 'border-red-900 bg-black/90' : 'border-[#c5a059]/40 bg-[#180e0a]'}`}>
-                    <div>
-                      <p className={`font-bold text-base sm:text-lg ${!p.isAlive ? 'text-red-400 line-through' : 'text-white'}`}>
-                        {p.name} {!p.isAlive && '💀'}
-                      </p>
-                      <p className="text-[11px] sm:text-xs text-[#d4af37]">Роль: {p.role?.name || 'Не назначена'}</p>
-                      {isSilenced && <span className="text-[10px] bg-yellow-900 text-yellow-200 px-1 rounded">Лишен голоса!</span>}
-                    </div>
-
-                    {p.isAlive ? (
-                      phase === 'day' && (
-                        <button
-                          disabled={isSilenced}
-                          onClick={() => handleVote(p.id)}
-                          className="px-3.5 py-2 text-xs font-bold rounded bg-[#d4af37] text-black disabled:opacity-30"
-                        >
-                          Голос ({votes[p.id] || 0})
-                        </button>
-                      )
-                    ) : (
-                      <div className="flex flex-col items-end gap-1">
-                        <span className="text-[10px] text-red-300 bg-red-950 px-2 py-0.5 rounded">{p.diedBy || 'Мертв'}</span>
-                        <button onClick={() => handleRestorePlayer(p.id)} className="text-[10px] text-emerald-300 border border-emerald-500 bg-emerald-950 px-2 py-0.5 rounded">
-                          Восстановить 🔄
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+      {isCitizensModalOpen && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#120a07] border-2 border-[#d4af37] p-5 sm:p-6 rounded-2xl max-w-4xl w-full space-y-6 max-h-[90vh] overflow-y-auto shadow-2xl relative">
+            <div className="flex justify-between items-center border-b border-[#c5a059]/30 pb-3">
+              <h3 className="text-xl font-bold text-[#d4af37] uppercase">Жители города {cityName} (Роли)</h3>
+              <button onClick={() => setIsCitizensModalOpen(false)} className="text-red-400 text-xl font-bold p-1">✕</button>
             </div>
+
+            {!isMayorVerified ? (
+              <div className="max-w-md mx-auto py-8 text-center space-y-4">
+                <div className="text-3xl">🎩🔒</div>
+                <h4 className="text-lg font-bold text-[#d4af37]">Подтвердите статус Мэра</h4>
+                <p className="text-xs text-[#c5a059]">Для просмотра ролей всех жителей введите <strong className="text-white">пароль Мэра</strong>, который указан в лобби.</p>
+                
+                <form onSubmit={handleVerifyMayorCode} className="space-y-3 pt-2">
+                  <input
+                    type="password"
+                    placeholder="Введите пароль Мэра..."
+                    value={codeInputValue}
+                    onChange={(e) => setCodeInputValue(e.target.value)}
+                    className="w-full rounded-lg border border-[#d4af37]/60 bg-[#0d0907] px-4 py-3 text-center text-white font-bold tracking-widest outline-none focus:border-red-600"
+                  />
+                  {authError && <p className="text-xs text-red-500 font-bold">{authError}</p>}
+                  <button type="submit" className="w-full bg-[#8b0000] border border-[#d4af37] py-3 rounded-lg font-bold uppercase text-[#f3e5ab] text-xs">
+                    Подтвердить и показать роли
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-xs text-[#c5a059]">
+                  <span>Мэр: <strong className="text-white">{currentUser}</strong> (Доступ подтвержден)</span>
+                  <span>Живых: {aliveCount} из {players.length}</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {players.map((p) => {
+                    const isSilenced = p.id === silencedPlayerId;
+                    const role = p.role;
+                    
+                    const isBeautyRole = role?.id?.toLowerCase().includes('beauty') || role?.name?.toLowerCase().includes('красотка');
+                    const beautyTargetObj = isBeautyRole && nightActions.beautyTarget 
+                      ? players.find(pl => pl.id === nightActions.beautyTarget) 
+                      : null;
+                    
+                    const getTeamBadgeStyle = (category) => {
+                      switch (category) {
+                        case 'mafia':
+                          return 'border-red-600/60 bg-red-950/80 text-red-300';
+                        case 'neutrals':
+                          return 'border-purple-600/60 bg-purple-950/80 text-purple-300';
+                        case 'civilians':
+                        default:
+                          return 'border-emerald-600/60 bg-emerald-950/80 text-emerald-300';
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={p.id}
+                        className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border p-4 shadow-xl transition-all duration-300 ${
+                          !p.isAlive 
+                            ? 'border-red-900 bg-black/95 opacity-75' 
+                            : 'border-[#c5a059]/40 bg-gradient-to-b from-[#1c100b] via-[#120a07] to-[#0a0503]'
+                        }`}
+                      >
+                        <div className="absolute top-1.5 left-1.5 h-3 w-3 border-l-2 border-t-2 border-[#d4af37]/60"></div>
+                        <div className="absolute top-1.5 right-1.5 h-3 w-3 border-r-2 border-t-2 border-[#d4af37]/60"></div>
+                        <div className="absolute bottom-1.5 left-1.5 h-3 w-3 border-l-2 border-b-2 border-[#d4af37]/60"></div>
+                        <div className="absolute bottom-1.5 right-1.5 h-3 w-3 border-r-2 border-b-2 border-[#d4af37]/60"></div>
+
+                        <div>
+                          <div className="relative h-48 w-full overflow-hidden rounded-lg border border-[#c5a059]/30 bg-black">
+                            <img
+                              src={role?.image || UNKNOWN_PERSON_IMAGE}
+                              alt={role?.name || "Роль"}
+                              className="h-full w-full object-cover object-top"
+                            />
+                          </div>
+
+                          <div className="mt-3 text-center space-y-1.5">
+                            <div>
+                              <span className={`inline-block rounded-md border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getTeamBadgeStyle(role?.category)}`}>
+                                {role?.name || role?.team || 'Житель'}
+                              </span>
+                            </div>
+
+                            <h3 className="text-xl font-bold uppercase tracking-wider text-[#d4af37]">
+                              {p.name} {!p.isAlive && '💀'}
+                            </h3>
+
+                            {isBeautyRole && (
+                              <div className="mt-1 bg-pink-950/60 border border-pink-700/50 rounded px-2 py-1 text-[11px] text-pink-200">
+                                💄 Цель ночью: <strong className="text-white">{beautyTargetObj ? beautyTargetObj.name : 'Не выбрана'}</strong>
+                              </div>
+                            )}
+
+                            {isSilenced && (
+                              <span className="inline-block text-[10px] bg-yellow-900 text-yellow-200 px-2 py-0.5 rounded font-bold">
+                                Голос заблокирован Крёстным!
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-4 border-t border-[#c5a059]/20 pt-3 text-center">
+                          {!p.isAlive && (
+                            <div className="flex flex-col items-center gap-1.5">
+                              <span className="text-[10px] text-red-300 bg-red-950 border border-red-800 px-2 py-0.5 rounded font-bold">
+                                {p.diedBy || 'Мертв'}
+                              </span>
+                              <button 
+                                onClick={() => handleRestorePlayer(p.id)} 
+                                className="text-[10px] text-emerald-300 border border-emerald-500 bg-emerald-950 px-3 py-1 rounded font-bold hover:bg-emerald-900 transition-all"
+                              >
+                                Восстановить 🔄
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
