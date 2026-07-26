@@ -27,7 +27,7 @@ function Play({ currentUser }) {
 
   const [cityNameInput, setCityNameInput] = useState('');
   const [cityName, setCityName] = useState(() => localStorage.getItem('mafia_cityName') || 'Тёмный Ручей');
-  const [introStep, setIntroStep] = useState(() => localStorage.getItem('mafia_introStep') || 'setup'); 
+  const [introStep, setIntroStep] = useState('setup'); 
   const [storyPage, setStoryPage] = useState(1);
 
   const [isLightning, setIsLightning] = useState(false);
@@ -111,7 +111,6 @@ function Play({ currentUser }) {
 
   useEffect(() => {
     localStorage.setItem('mafia_cityName', cityName);
-    localStorage.setItem('mafia_introStep', introStep);
     localStorage.setItem('mafia_mode', mode || '');
     localStorage.setItem('mafia_roomCode', roomCode);
     localStorage.setItem('mafia_players', JSON.stringify(players));
@@ -127,7 +126,7 @@ function Play({ currentUser }) {
     localStorage.setItem('mafia_silencedId', silencedPlayerId || '');
     localStorage.setItem('mafia_winnerInfo', JSON.stringify(winnerInfo));
   }, [
-    cityName, introStep, mode, roomCode, players, selectedRoles,
+    cityName, mode, roomCode, players, selectedRoles,
     phase, round, currentTurnIndex, nightActions, nightLog,
     detailedMorningReport, fanAffiliation, snitchKnownRolesCount,
     silencedPlayerId, winnerInfo
@@ -300,6 +299,7 @@ function Play({ currentUser }) {
     triggerLoading('Создание городской ратуши...', () => {
       setRoomCode(Math.floor(1000 + Math.random() * 9000).toString());
       setPlayers([]);
+      setIntroStep('done');
       setMode('lobby');
     });
   };
@@ -662,7 +662,6 @@ function Play({ currentUser }) {
   };
 
   const handlePlayAgain = () => {
-    localStorage.clear();
     setPlayers(players.map(p => ({ ...p, isAlive: true, role: null, diedBy: null })));
     setSelectedRoles([]);
     setWinnerInfo(null);
@@ -698,6 +697,7 @@ function Play({ currentUser }) {
         </div>
       )}
 
+      {/* ШАГ 1: ВВОД НАЗВАНИЯ ГОРОДКА */}
       {introStep === 'setup' && (
         <div className="rounded-2xl border-2 border-[#d4af37] bg-[#120a07] p-5 sm:p-8 text-center space-y-6 max-w-xl mx-auto shadow-2xl">
           <div className="text-5xl animate-bounce"><img className="w-[50px] h-[50px] mx-auto" src="/favicon.svg" alt="" /></div>
@@ -726,17 +726,24 @@ function Play({ currentUser }) {
         </div>
       )}
 
+      {/* ШАГ 2: ИСТОРИЯ С МОЛНИЯМИ */}
       {introStep === 'story' && (
         <div
           className={`fixed inset-0 z-40 flex flex-col items-center justify-between p-4 sm:p-6 transition-colors duration-75 ${
             isLightning ? 'bg-white text-black' : 'bg-black text-white'
           }`}
         >
-          <div className="absolute top-3 left-3 right-3 flex items-center justify-center text-[10px] sm:text-xs text-red-500 animate-pulse bg-black/80 px-3 py-1 rounded-full border border-red-800 text-center">
+          <div className="absolute top-3 left-3 right-3 flex items-center justify-between text-[10px] sm:text-xs text-red-500 animate-pulse bg-black/80 px-3 py-1 rounded-full border border-red-800 text-center">
             <span>⚡ Саундтрек, молния и гром активны</span>
+            <button
+              onClick={finishIntro}
+              className="text-[#f3e5ab] bg-[#8b0000] px-2 py-0.5 rounded border border-[#d4af37] uppercase font-bold hover:scale-105 transition-all ml-2"
+            >
+              Пропустить ➔
+            </button>
           </div>
 
-          <div className="max-w-2xl w-full my-auto text-center space-y-6 sm:space-y-8">
+          <div className="max-w-2xl w-full my-auto text-center space-y-6 sm:space-y-8 pt-6">
             {storyPage === 1 && (
               <div className="space-y-6 animate-pulse">
                 <div className="p-4 sm:p-6 rounded-2xl bg-red-950/40 border border-red-600/50">
@@ -811,12 +818,20 @@ function Play({ currentUser }) {
 
             <div className="pt-4 flex flex-col sm:flex-row justify-center items-center gap-3">
               <span className={`text-xs font-bold ${isLightning ? 'text-black' : 'text-[#c5a059]'}`}>Страница {storyPage} из 5</span>
-              <button
-                onClick={handleNextPage}
-                className="w-full sm:w-auto rounded-xl border-2 border-[#d4af37] bg-[#8b0000] px-8 py-3 text-base sm:text-lg font-black uppercase text-[#f3e5ab] hover:scale-105 transition-all shadow-xl"
-              >
-                {storyPage === 5 ? 'Войти в игру 🚪' : 'Далее ➔'}
-              </button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <button
+                  onClick={finishIntro}
+                  className="flex-1 sm:flex-none rounded-xl border border-[#c5a059] bg-zinc-900 px-5 py-3 text-sm font-bold uppercase text-[#c5a059] hover:bg-zinc-800 transition-all shadow-lg"
+                >
+                  Пропустить ➔
+                </button>
+                <button
+                  onClick={handleNextPage}
+                  className="flex-1 sm:flex-none rounded-xl border-2 border-[#d4af37] bg-[#8b0000] px-8 py-3 text-base sm:text-lg font-black uppercase text-[#f3e5ab] hover:scale-105 transition-all shadow-xl"
+                >
+                  {storyPage === 5 ? 'Войти в игру 🚪' : 'Далее ➔'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -849,6 +864,7 @@ function Play({ currentUser }) {
         </div>
       )}
 
+      {/* ШАГ 3: КНОПКА СОЗДАНИЯ ГОРОДА ПОСЛЕ ИСТОРИИ */}
       {introStep === 'done' && !mode && (
         <div className="text-center space-y-6 py-8 sm:py-12 px-2">
           <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-widest text-[#d4af37]">
@@ -862,7 +878,7 @@ function Play({ currentUser }) {
         </div>
       )}
 
-      {mode === 'lobby' && (
+      {introStep === 'done' && mode === 'lobby' && (
         <div className="rounded-2xl border border-[#d4af37]/40 bg-[#120a07] p-4 sm:p-8 space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#c5a059]/30 pb-4">
             <div>
@@ -895,7 +911,7 @@ function Play({ currentUser }) {
         </div>
       )}
 
-      {mode === 'card_select' && (
+      {introStep === 'done' && mode === 'card_select' && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             <h2 className="text-xl sm:text-2xl font-bold text-[#d4af37]">Выбрано карт: {selectedRoles.length} из {players.length}</h2>
@@ -920,7 +936,7 @@ function Play({ currentUser }) {
         </div>
       )}
 
-      {mode === 'game' && phase !== 'ended' && (
+      {introStep === 'done' && mode === 'game' && phase !== 'ended' && (
         <div className="space-y-6">
           <div className="flex flex-wrap justify-between items-center gap-3 bg-[#1c100b] border border-[#d4af37]/40 px-4 py-3 rounded-xl">
             <span className="text-xs sm:text-sm font-bold text-[#d4af37]">👥 Осталось в живых: <strong className="text-white text-base">{aliveCount}</strong> из {players.length}</span>
